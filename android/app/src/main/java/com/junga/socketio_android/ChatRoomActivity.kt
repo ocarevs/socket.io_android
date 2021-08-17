@@ -57,8 +57,8 @@ class ChatRoomActivity : AppCompatActivity(), View.OnClickListener {
 
         //Let's connect to our Chat room! :D
         try {
-            mSocket = IO.socket("http://10.0.2.2:3000")
-            Log.d("success", mSocket.id())
+            mSocket = IO.socket("http://192.168.0.105:3000")
+            Log.d("success", "${mSocket.id()}")
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -67,6 +67,9 @@ class ChatRoomActivity : AppCompatActivity(), View.OnClickListener {
 
         mSocket.connect()
         mSocket.on(Socket.EVENT_CONNECT, onConnect)
+        mSocket.on(Socket.EVENT_DISCONNECT, onDisconnected)
+        mSocket.on(Socket.EVENT_MESSAGE, onMessage)
+        mSocket.on(Socket.EVENT_CONNECT_TIMEOUT, onConnectTimeout)
         mSocket.on("newUserToChatRoom", onNewUser)
         mSocket.on("updateChat", onUpdateChat)
         mSocket.on("userLeftChatRoom", onUserLeft)
@@ -88,7 +91,18 @@ class ChatRoomActivity : AppCompatActivity(), View.OnClickListener {
         val data = initialData(userName, roomName)
         val jsonData = gson.toJson(data)
         mSocket.emit("subscribe", jsonData)
+    }
 
+    var onConnectTimeout = Emitter.Listener {
+        Log.w("Connect timeout", "onConnectTimeout")
+    }
+
+    var onMessage = Emitter.Listener {
+        Log.d("On message", "onMessage")
+    }
+
+    var onDisconnected = Emitter.Listener {
+        throw Exception("Socket disconnected")
     }
 
     var onNewUser = Emitter.Listener {
